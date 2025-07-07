@@ -31,7 +31,7 @@ func main() {
 		editor:       ui.InitEditor(),
 	}, tea.WithAltScreen())
 
-	f, _ := tea.LogToFile("debug.log", "debug")
+	f, _ := tea.LogToFile("logs/debug.log", "debug")
 	defer f.Close()
 
 	if _, err := p.Run(); err != nil {
@@ -51,6 +51,10 @@ func (p Pen) Init() tea.Cmd {
 func (p Pen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
+
+	case tea.WindowSizeMsg:
+		p.handleResize(msg.Width, msg.Height)
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -81,22 +85,29 @@ func (p Pen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (p Pen) View() string {
-
 	var v string
 
 	if p.focused == editorView {
 		v += lipgloss.JoinHorizontal(
 			lipgloss.Top,
-			style.Base.Render(p.fileExplorer.View()),
-			style.Focused.Render(p.editor.View()),
+			style.FileExplorerBase.Render(p.fileExplorer.View()),
+			style.EditorFocused.Render(p.editor.View()),
 		)
 	} else {
 		v += lipgloss.JoinHorizontal(
 			lipgloss.Top,
-			style.Focused.Render(p.fileExplorer.View()),
-			style.Base.Render(p.editor.View()),
+			style.FileExplorerFocused.Render(p.fileExplorer.View()),
+			style.EditorBase.Render(p.editor.View()),
 		)
 	}
 
 	return v
+}
+
+// Helper function to handle window resize
+func (p *Pen) handleResize(width, height int) {
+
+	editorWidth := width - style.FileExplorerWidth - style.EditorMargin - 6
+	p.fileExplorer.SetHeight(height - style.VerticalPadding)
+	p.editor.SetSize(editorWidth, height-style.VerticalPadding)
 }

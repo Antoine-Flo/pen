@@ -11,7 +11,6 @@ type errMsg error
 
 type Editor struct {
 	textearea textarea.Model
-	text      string
 	err       error
 }
 
@@ -21,7 +20,6 @@ func InitEditor() Editor {
 
 	return Editor{
 		textearea: editor,
-		text:      "Hello there",
 		err:       nil,
 	}
 }
@@ -48,4 +46,9 @@ func (e Editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (e Editor) View() string {
 	return e.textearea.View()
+}
+
+func (e *Editor) SetSize(width, height int) {
+	e.textearea.SetWidth(width)
+	e.textearea.SetHeight(height)
 }

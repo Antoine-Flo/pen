@@ -3,8 +3,8 @@ package ui
 import (
 	"fmt"
 	"io"
-	"strings"
 	"pen/style"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,7 +16,6 @@ func (i item) FilterValue() string { return "" }
 
 type FileExplorer struct {
 	list   list.Model
-	choice string
 }
 
 func InitFileExplorer() FileExplorer {
@@ -48,15 +47,13 @@ func InitFileExplorer() FileExplorer {
 		item("Cheeseburgers"),
 		item("Currywurst"),
 	}
-
-	l := list.New(items, itemDelegate{}, 20, 20)
+	l := list.New(items, itemDelegate{}, 50, 20)
 	l.SetShowStatusBar(false)
 	l.SetShowHelp(false)
 	l.Title = "Notes"
 
 	return FileExplorer{
 		list:   l,
-		choice: "list",
 	}
 }
 
@@ -75,6 +72,10 @@ func (f FileExplorer) View() string {
 	return "\n" + f.list.View()
 }
 
+func (f *FileExplorer) SetHeight(height int) {
+	f.list.SetHeight(height)
+}
+
 type itemDelegate struct{}
 
 func (d itemDelegate) Height() int                             { return 1 }
@@ -91,7 +92,7 @@ func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	fn := style.ItemStyle.Render
 	if index == m.Index() {
 		fn = func(s ...string) string {
-			return style.SelectedItemStyle.Render("> " + strings.Join(s, " "))
+			return style.SelectedItemStyle.Render(strings.Join(s, " "))
 		}
 	}
 
