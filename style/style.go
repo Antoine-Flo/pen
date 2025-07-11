@@ -12,26 +12,13 @@ const (
 	VerticalPadding   = 4
 )
 
-var base = lipgloss.NewStyle().
-	BorderStyle(lipgloss.HiddenBorder())
-
-var focused = lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("69"))
-
 var ItemStyle = lipgloss.NewStyle().PaddingLeft(2)
 var SelectedItemStyle = lipgloss.NewStyle().PaddingLeft(2).Foreground(lipgloss.Color("170"))
 
-// File Explorer styles with fixed width
-var FileExplorerBase = base.
-	Width(FileExplorerWidth)
+var Base = lipgloss.NewStyle().
+	BorderStyle(lipgloss.HiddenBorder())
 
-var FileExplorerFocused = focused.
-	Width(FileExplorerWidth)
+var Focused = lipgloss.NewStyle().
+	BorderStyle(lipgloss.NormalBorder()).
+	BorderForeground(lipgloss.Color("69"))
 
-// Editor styles - will be sized dynamically
-var EditorBase = base.
-	PaddingLeft(ViewMargin)
-
-var EditorFocused = focused.
-	PaddingLeft(ViewMargin)

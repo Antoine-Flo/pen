@@ -8,25 +8,26 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"pen/style"
 	"pen/ui"
 )
 
-type focusedView uint
+type focusedPane uint
 
 const (
-	editorView focusedView = iota
-	fileExplorerView
+	rightPane focusedPane = iota
+	leftPane
 )
 
 type Pen struct {
-	focused      focusedView
-	fileExplorer ui.FileExplorer
-	editor       ui.Editor
+	focused       focusedPane
+	fileExplorer  *ui.FileExplorer
+	editor        *ui.Editor
+	width, height int
 }
 
 func main() {
 	p := tea.NewProgram(Pen{
+		focused:      rightPane, // Editor focused by default
 		fileExplorer: ui.InitFileExplorer(),
 		editor:       ui.InitEditor(),
 	}, tea.WithAltScreen())
@@ -42,6 +43,10 @@ func main() {
 }
 
 func (p Pen) Init() tea.Cmd {
+	// Set initial focus state
+	p.editor.Focused = true
+	p.fileExplorer.Focused = false
+
 	return tea.Batch(
 		p.fileExplorer.Init(),
 		p.editor.Init(),
@@ -53,31 +58,38 @@ func (p Pen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case tea.WindowSizeMsg:
-		p.handleResize(msg.Width, msg.Height)
+		p.width, p.height = msg.Width, msg.Height
+		p.fileExplorer.Height, p.editor.Height = p.height, p.height
 
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
 			return p, tea.Quit
 		case "ctrl+w":
-			if p.focused == editorView {
-				p.focused = fileExplorerView
+			// Switch focus between panes
+			if p.focused == rightPane {
+				p.focused = leftPane
+				p.editor.Focused = false
+				p.fileExplorer.Focused = true
 			} else {
-				p.focused = editorView
+				p.focused = rightPane
+				p.editor.Focused = true
+				p.fileExplorer.Focused = false
 			}
+			return p, nil
 		}
 	}
 
 	var cmd tea.Cmd
 	var model tea.Model
 
-	if p.focused == editorView {
+	if p.focused == rightPane {
 		model, cmd = p.editor.Update(msg)
-		p.editor = model.(ui.Editor)
+		p.editor = model.(*ui.Editor)
 		cmds = append(cmds, cmd)
 	} else {
 		model, cmd = p.fileExplorer.Update(msg)
-		p.fileExplorer = model.(ui.FileExplorer)
+		p.fileExplorer = model.(*ui.FileExplorer)
 		cmds = append(cmds, cmd)
 	}
 
@@ -85,29 +97,16 @@ func (p Pen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (p Pen) View() string {
-	var v string
 
-	if p.focused == editorView {
-		v += lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			style.FileExplorerBase.Render(p.fileExplorer.View()),
-			style.EditorFocused.Render(p.editor.View()),
-		)
-	} else {
-		v += lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			style.FileExplorerFocused.Render(p.fileExplorer.View()),
-			style.EditorBase.Render(p.editor.View()),
-		)
-	}
+	fileExplorer := p.fileExplorer.View()
+	p.editor.Width = p.width - lipgloss.Width(fileExplorer)
+	editor := p.editor.View()
+
+	v := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		fileExplorer,
+		editor,
+	)
 
 	return v
-}
-
-// Helper function to handle window resize
-func (p *Pen) handleResize(width, height int) {
-
-	editorWidth := width - style.FileExplorerWidth - style.EditorMargin - 6
-	p.fileExplorer.SetHeight(height - style.VerticalPadding)
-	p.editor.SetSize(editorWidth, height-style.VerticalPadding)
 }

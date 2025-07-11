@@ -2,33 +2,37 @@ package ui
 
 import (
 	"log"
+	"pen/style"
 
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type errMsg error
 
 type Editor struct {
-	textearea textarea.Model
-	err       error
+	textearea     textarea.Model
+	err           error
+	Focused       bool
+	Width, Height int
 }
 
-func InitEditor() Editor {
+func InitEditor() *Editor {
 	editor := textarea.New()
 	editor.Focus()
 
-	return Editor{
+	return &Editor{
 		textearea: editor,
 		err:       nil,
 	}
 }
 
-func (e Editor) Init() tea.Cmd {
+func (e *Editor) Init() tea.Cmd {
 	return textarea.Blink
 }
 
-func (e Editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (e *Editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var cmd tea.Cmd
 
@@ -44,11 +48,18 @@ func (e Editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return e, cmd
 }
 
-func (e Editor) View() string {
-	return e.textearea.View()
-}
+func (e *Editor) View() string {
+	var v lipgloss.Style
 
-func (e *Editor) SetSize(width, height int) {
-	e.textearea.SetWidth(width)
-	e.textearea.SetHeight(height)
+	if e.Focused {
+		v = style.Focused
+	} else {
+		v = style.Base
+	}
+
+	// Set textarea dimensions accounting for borders
+	e.textearea.SetWidth(e.Width - 2)
+	e.textearea.SetHeight(e.Height - 2)
+
+	return v.Render(e.textearea.View())
 }

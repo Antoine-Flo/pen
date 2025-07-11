@@ -8,17 +8,22 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type item string
 
+const fileExplorerWidth = 30
+
 func (i item) FilterValue() string { return "" }
 
 type FileExplorer struct {
-	list   list.Model
+	list          list.Model
+	Focused       bool
+	Width, Height int
 }
 
-func InitFileExplorer() FileExplorer {
+func InitFileExplorer() *FileExplorer {
 	items := []list.Item{
 		item("Ramen"),
 		item("Tomato Soup"),
@@ -52,24 +57,37 @@ func InitFileExplorer() FileExplorer {
 	l.SetShowHelp(false)
 	l.Title = "Notes"
 
-	return FileExplorer{
-		list:   l,
+	return &FileExplorer{
+		list: l,
 	}
 }
 
-func (f FileExplorer) Init() tea.Cmd {
+func (f *FileExplorer) Init() tea.Cmd {
 	return nil
 }
 
-func (f FileExplorer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (f *FileExplorer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var cmd tea.Cmd
 	f.list, cmd = f.list.Update(msg)
 	return f, cmd
 }
 
-func (f FileExplorer) View() string {
-	return "\n" + f.list.View()
+func (f *FileExplorer) View() string {
+
+	v := lipgloss.NewStyle().Width(fileExplorerWidth)
+
+	if f.Focused {
+		v = v.Inherit(style.Focused)
+	} else {
+		v = v.Inherit(style.Base)
+	}
+
+	// Set list dimensions accounting for borders
+	f.list.SetWidth(fileExplorerWidth - 2)
+	f.list.SetHeight(f.Height - 2)
+
+	return v.Render(f.list.View())
 }
 
 func (f *FileExplorer) SetHeight(height int) {
