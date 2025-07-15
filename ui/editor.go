@@ -14,7 +14,7 @@ type errMsg error
 type Editor struct {
 	textearea     textarea.Model
 	err           error
-	Focused       bool
+	focused       bool
 	Width, Height int
 }
 
@@ -30,6 +30,10 @@ func InitEditor() *Editor {
 
 func (e *Editor) Init() tea.Cmd {
 	return textarea.Blink
+}
+
+func (e *Editor) SetFocused(focused bool) {
+	e.focused = focused
 }
 
 func (e *Editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -48,10 +52,11 @@ func (e *Editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return e, cmd
 }
 
+// View uses internal focused field set by main
 func (e *Editor) View() string {
 	var v lipgloss.Style
 
-	if e.Focused {
+	if e.focused {
 		v = style.Focused
 	} else {
 		v = style.Base

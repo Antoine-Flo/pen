@@ -43,14 +43,19 @@ func main() {
 }
 
 func (p Pen) Init() tea.Cmd {
-	// Set initial focus state
-	p.editor.Focused = true
-	p.fileExplorer.Focused = false
+	// Set initial focus state using single source of truth
+	p.updateFocusState()
 
 	return tea.Batch(
 		p.fileExplorer.Init(),
 		p.editor.Init(),
 	)
+}
+
+// updateFocusState syncs component focus based on main focus state
+func (p *Pen) updateFocusState() {
+	p.editor.SetFocused(p.focused == rightPane)
+	p.fileExplorer.SetFocused(p.focused == leftPane)
 }
 
 func (p Pen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -66,16 +71,8 @@ func (p Pen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return p, tea.Quit
 		case "ctrl+w":
-			// Switch focus between panes
-			if p.focused == rightPane {
-				p.focused = leftPane
-				p.editor.Focused = false
-				p.fileExplorer.Focused = true
-			} else {
-				p.focused = rightPane
-				p.editor.Focused = true
-				p.fileExplorer.Focused = false
-			}
+			p.focused = focusedPane(1 - p.focused)
+			p.updateFocusState()
 			return p, nil
 		}
 	}
@@ -86,13 +83,13 @@ func (p Pen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if p.focused == rightPane {
 		model, cmd = p.editor.Update(msg)
 		p.editor = model.(*ui.Editor)
-		cmds = append(cmds, cmd)
-	} else {
+	}
+	if p.focused == leftPane {
 		model, cmd = p.fileExplorer.Update(msg)
 		p.fileExplorer = model.(*ui.FileExplorer)
-		cmds = append(cmds, cmd)
 	}
 
+	cmds = append(cmds, cmd)
 	return p, tea.Batch(cmds...)
 }
 

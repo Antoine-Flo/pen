@@ -19,7 +19,7 @@ func (i item) FilterValue() string { return "" }
 
 type FileExplorer struct {
 	list          list.Model
-	Focused       bool
+	focused       bool
 	Width, Height int
 }
 
@@ -66,6 +66,10 @@ func (f *FileExplorer) Init() tea.Cmd {
 	return nil
 }
 
+func (f *FileExplorer) SetFocused(focused bool) {
+	f.focused = focused
+}
+
 func (f *FileExplorer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	var cmd tea.Cmd
@@ -77,7 +81,7 @@ func (f *FileExplorer) View() string {
 
 	v := lipgloss.NewStyle().Width(fileExplorerWidth)
 
-	if f.Focused {
+	if f.focused {
 		v = v.Inherit(style.Focused)
 	} else {
 		v = v.Inherit(style.Base)
