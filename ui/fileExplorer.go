@@ -3,6 +3,8 @@ package ui
 import (
 	"fmt"
 	"io"
+
+	"pen/note"
 	"pen/style"
 	"strings"
 
@@ -11,54 +13,45 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type item string
+type NoteItem struct {
+	note *note.Note
+}
 
 const fileExplorerWidth = 30
 
-func (i item) FilterValue() string { return "" }
+func (i NoteItem) FilterValue() string { return "" }
+
+func (i NoteItem) Title() string {
+	return i.note.Name
+}
+
+func (i NoteItem) Description() string {
+	return ""
+}
 
 type FileExplorer struct {
 	list          list.Model
 	focused       bool
 	Width, Height int
+	err           error
 }
 
 func InitFileExplorer() *FileExplorer {
-	items := []list.Item{
-		item("Ramen"),
-		item("Tomato Soup"),
-		item("Hamburgers"),
-		item("Cheeseburgers"),
-		item("Currywurst"),
-		item("Okonomiyaki"),
-		item("Pasta"),
-		item("Fillet Mignon"),
-		item("Caviar"),
-		item("Just Wine"),
-		item("Hamburgers"),
-		item("Cheeseburgers"),
-		item("Currywurst"),
-		item("Okonomiyaki"),
-		item("Pasta"),
-		item("Fillet Mignon"),
-		item("Caviar"),
-		item("Currywurst"),
-		item("Okonomiyaki"),
-		item("Pasta"),
-		item("Fillet Mignon"),
-		item("Caviar"),
-		item("Just Wine"),
-		item("Hamburgers"),
-		item("Cheeseburgers"),
-		item("Currywurst"),
+	notes, err := note.ListNotes("./testFiles")
+
+	items := make([]list.Item, len(notes))
+	for i, note := range notes {
+		items[i] = NoteItem{note: note}
 	}
+
 	l := list.New(items, itemDelegate{}, 50, 20)
 	l.SetShowStatusBar(false)
 	l.SetShowHelp(false)
-	l.Title = "Notes"
+	l.Title = "📁 Notes"
 
 	return &FileExplorer{
 		list: l,
+		err:  err,
 	}
 }
 
@@ -104,12 +97,12 @@ func (d itemDelegate) Height() int                             { return 1 }
 func (d itemDelegate) Spacing() int                            { return 0 }
 func (d itemDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
 func (d itemDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
-	i, ok := listItem.(item)
+	i, ok := listItem.(NoteItem)
 	if !ok {
 		return
 	}
 
-	str := fmt.Sprint(i)
+	str := i.Title()
 
 	fn := style.ItemStyle.Render
 	if index == m.Index() {
