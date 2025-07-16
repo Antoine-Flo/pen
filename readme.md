@@ -61,7 +61,6 @@ Pen believes in:
 - [ ] Markdown syntax highlighting
 - [ ] Note linking (wiki-style)
 - [ ] Search functionality
-- [ ] Multiple note tabs
 
 ## 🤝 Contributing
 
